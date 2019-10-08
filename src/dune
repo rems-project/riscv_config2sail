@@ -1,0 +1,3 @@
+(executable
+  (name riscv_config2sail)
+  (libraries yaml yaml.unix))
