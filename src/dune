@@ -1,3 +1,4 @@
 (executable
   (name riscv_config2sail)
-  (libraries yaml yaml.unix))
+  (libraries yaml yaml.unix ezjsonm))
+(env (dev (flags (:standard -warn-error -A))))
