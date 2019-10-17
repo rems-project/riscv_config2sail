@@ -89,8 +89,21 @@ struct satp_config = {
   ppn  : WARL_either
 }
 
+struct isa_config = {
+  I : bool, /* The base integer ISA (always true because E is not implemented yet) */
+  M : bool, /* mul / div*/
+  F : bool, /* floating point */
+  A : bool, /* atomic memory */
+  D : bool, /* double floating point */
+  C : bool, /* compressed instructions */
+  S : bool, /* supervisor mode */
+  U : bool, /* user mode */
+  Zicsr : bool, /* control and status registers */
+  Zifencei : bool /* instruction fetch fence */
+}
+
 struct riscv_isa_config = {
-  ISA    : string,
+  ISA    : isa_config,
   hw_data_misaligned_support : bool,
   xlen : int, /* XXX 32, 64, 128 */
   misa : misa_config,

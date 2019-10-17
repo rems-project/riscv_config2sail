@@ -359,13 +359,39 @@ let get_mhpmevent_config k yaml =
 let read_yaml_file s =
   Rresult.R.get_ok (Bos.OS.File.read Fpath.(v s) >>= yaml_of_string)
 
+let zicsr_re = Str.regexp_string "Zicsr"
+let zifencei_re = Str.regexp_string "Zifencei"
+
+let contains_regexp r s =
+  try ignore(Str.search_forward r s 0); true
+  with Not_found -> false
+
+let get_isa_config k y =
+  let isa_s = get_string [k] y in
+  (k,
+  StructValue (
+    "isa_config",
+    [
+      ("I", Bool(String.contains isa_s 'I'));
+      ("M", Bool(String.contains isa_s 'M'));
+      ("F", Bool(String.contains isa_s 'F'));
+      ("A", Bool(String.contains isa_s 'A'));
+      ("D", Bool(String.contains isa_s 'D'));
+      ("C", Bool(String.contains isa_s 'C'));
+      ("S", Bool(String.contains isa_s 'S'));
+      ("U", Bool(String.contains isa_s 'U'));
+      ("Zicsr", Bool(contains_regexp zicsr_re isa_s));
+      ("Zifencei", Bool(contains_regexp zifencei_re isa_s));
+    ]
+  ))
+
 let main () = 
   let isa_yaml = read_yaml_file !opt_isa_yaml in
   let platform_yaml = read_yaml_file !opt_platform_yaml in
   let isa_config =
     StructValue
       ("riscv_isa_config", [
-         get_string_val "ISA" isa_yaml;
+         get_isa_config "ISA" isa_yaml;
          get_bool_val "hw_data_misaligned_support" isa_yaml;
          get_int_val "xlen" isa_yaml;
          get_misa_config "misa" isa_yaml;
