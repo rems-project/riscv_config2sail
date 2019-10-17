@@ -489,7 +489,8 @@ let main () =
       ) in 
       let result = Bos.OS.File.write_lines Fpath.(v !opt_file_out) [
         "let isa_config : riscv_isa_config = " ^ (pp_sail_value isa_config);
-        "let platform_config : riscv_platform_config = " ^ (pp_sail_value platform_config)
+        "let platform_config : riscv_platform_config = " ^ (pp_sail_value platform_config);
+        "" (*final new line*)
       ] in
       match result with
       | Rresult.Ok (_) -> print_endline ("OK, wrote " ^ !opt_file_out)
