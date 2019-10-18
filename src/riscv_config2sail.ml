@@ -78,7 +78,7 @@ let options = Arg.align ([
 
 let usage_msg =
     ("riscv_config2sail " (*^ "pre beta"*) ^ "\n"
-     ^ "usage:       riscv_config2sail <file1.sail> .. <fileN.sail>\n"
+     ^ "usage:       riscv_config2sail -i isa.yaml -p platform.yaml -o output.sail\n"
     )
 
 let _ =
@@ -370,7 +370,9 @@ let get_mhpmevent_config k yaml =
     get_warl_either k yaml
 
 let read_yaml_file s =
-  Rresult.R.get_ok (Bos.OS.File.read Fpath.(v s) >>= yaml_of_string)
+  match Bos.OS.File.read Fpath.(v s) >>= yaml_of_string with
+  | Rresult.Ok(y) -> y
+  | Rresult.Error(`Msg m) -> raise (Failure (Printf.sprintf "Failed to read %s: '%s'" s m))
 
 let zicsr_re = Str.regexp_string "Zicsr"
 let zifencei_re = Str.regexp_string "Zifencei"
@@ -400,6 +402,12 @@ let get_isa_config k y =
 
 let main () =
   try
+    if !opt_isa_yaml = "" then
+      raise (Failure "Please specify an isa yaml file using -i");
+    if !opt_platform_yaml = "" then
+      raise (Failure "Please specify an platform yaml file using -p");
+    if !opt_file_out = "" then
+      raise (Failure "Please specify an output file using -o");
   let isa_yaml = read_yaml_file !opt_isa_yaml in
   let platform_yaml = read_yaml_file !opt_platform_yaml in
   let isa_config =
