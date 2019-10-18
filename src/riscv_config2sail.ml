@@ -87,10 +87,17 @@ let _ =
       opt_file_arguments := (!opt_file_arguments) @ [s])
     usage_msg
 
+let yaml_to_string y =
+  match Yaml.yaml_to_string y with
+  | Ok s -> s
+  | Error (`Msg s) -> s
+
 let find_key (k:string) (yaml:yaml) =
   let (_, v) =
     match yaml with
-    | `O(ks) -> List.find (fun (s, _) -> s.value = k) ks in
+    | `O(ks) -> (try List.find (fun (s, _) -> s.value = k) ks with
+                | Not_found -> raise (Failure(Printf.sprintf "Failed to find key '%s' on '%s'" k (yaml_to_string yaml))))
+    | _ -> raise (Failure (Printf.sprintf "Attempted to find key '%s' on non-dict '%s'" k (yaml_to_string yaml))) in
   v
 
 let rec find_path ks yaml =
@@ -113,6 +120,7 @@ let get_string path yaml =
   let s = find_path path yaml in
   match s with
   | `Scalar(sc) -> sc.value
+  | _ -> raise (Failure(Printf.sprintf "Expected scalar value at path '%s' in '%s'" (String.concat "." path) (yaml_to_string yaml)))
 
 let get_string_val k ?(yk=[k]) yaml =
   (k, String(get_string yk yaml))
@@ -122,22 +130,27 @@ let get_bool path yaml =
   match s with
   | "true" -> true
   | "false" -> false
+  | _ -> raise (Failure(Printf.sprintf "Expected boolean at path '%s' in '%s' but got '%s'" (String.concat "." path) (yaml_to_string yaml) s))
 
 let get_bool_val k ?(yk=[k]) yaml =
   (k, Bool(get_bool yk yaml))
 
 let get_int64 path yaml =
   let s = get_string path yaml in
-  Int64.of_string s
+  try Int64.of_string s with
+  | Failure(s) -> raise (Failure (Printf.sprintf "Expected int64 at path '%s' in '%s' but got %s" (String.concat "." path) (yaml_to_string yaml) s))
 
 let get_int_val k ?(yk=[k]) yaml = 
   (k, Int(get_int64 yk yaml))
 
 let get_int (s : yaml) = match s with
-  | `Scalar(s) -> Int(Int64.of_string (s.value))
+  | `Scalar(s) -> (try Int(Int64.of_string (s.value)) with
+                  | Failure(_) -> raise (Failure (Printf.sprintf "get_int failed on '%s'" s.value)))
+  | _ -> raise (Failure(Printf.sprintf "Expected int64 but got '%s'" (yaml_to_string s)))
 
 let get_list f (yaml : yaml) = match yaml with
   | `A(l) -> List.map f l
+  | _ -> raise (Failure(Printf.sprintf "Expected array but got '%s'" (yaml_to_string yaml)))
 
 let get_warl_range k ?(yk=[k]) yaml =
   let range_yaml = find_path yk yaml in
@@ -385,7 +398,8 @@ let get_isa_config k y =
     ]
   ))
 
-let main () = 
+let main () =
+  try
   let isa_yaml = read_yaml_file !opt_isa_yaml in
   let platform_yaml = read_yaml_file !opt_platform_yaml in
   let isa_config =
@@ -493,7 +507,8 @@ let main () =
         "" (*final new line*)
       ] in
       match result with
-      | Rresult.Ok (_) -> print_endline ("OK, wrote " ^ !opt_file_out)
-      | Rresult.Error(`Msg s) -> print_endline ("Failed to write " ^ !opt_file_out ^ ": " ^ s)
+      | Ok (_) -> print_endline ("OK, wrote " ^ !opt_file_out)
+      | Error(`Msg s) -> (print_endline ("Failed to write " ^ !opt_file_out ^ ": " ^ s); exit 2)
+  with Failure(s) -> (print_endline ("Error: " ^ s); exit 1)
 
 let _ = main ()
