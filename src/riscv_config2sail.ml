@@ -77,7 +77,7 @@ let options = Arg.align ([
 ])
 
 let usage_msg =
-    ("riscv_config2sail " (*^ "pre beta"*) ^ "\n"
+    ("riscv_config2sail %%VERSION%%\n"
      ^ "usage:       riscv_config2sail -i isa.yaml -p platform.yaml -o output.sail\n"
     )
 

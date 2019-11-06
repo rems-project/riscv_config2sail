@@ -1,4 +1,5 @@
 (executable
   (name riscv_config2sail)
-  (libraries yaml bos))
+  (libraries yaml bos)
+  (public_name riscv_config2sail))
 
