@@ -45,6 +45,7 @@ type sail_value =
   | Int of int64
   | Id of string (* e.g. enum constructor *)
   | String of string
+  | TupleValue of sail_value list
   | StructValue of string * ((string * sail_value) list) (* Construct id then field names and values *)
   | UnionValue of string * sail_value (* Constructor ID + argument *)
   | Array of sail_value list
@@ -65,6 +66,9 @@ let rec pp_sail_value ?(indent=0) ?(indent_width=2) v = match v with
   | Array xs ->
      let xss = List.map pp_sail_value xs in
      "[|" ^ (String.concat ", " xss) ^ "|]"
+  | TupleValue xs ->
+     let xss = List.map pp_sail_value xs in
+     "(" ^ (String.concat ", " xss) ^ ")"
 
 let opt_file_out : string ref = ref ""
 let opt_isa_yaml : string ref = ref ""
@@ -152,16 +156,20 @@ let get_list f (yaml : yaml) = match yaml with
   | `A(l) -> List.map f l
   | _ -> raise (Failure(Printf.sprintf "Expected array but got '%s'" (yaml_to_string yaml)))
 
+let get_warl_range_entry (yaml : yaml) = match yaml with
+  | `A([v])      -> UnionValue("WARL_range_value", get_int v)
+  | `A([v1; v2]) -> UnionValue("WARL_range_interval", TupleValue([get_int v1; get_int v2]))
+  | _            -> raise (Failure(Printf.sprintf "Expected one or two entry array but got '%s'" (yaml_to_string yaml)))
+
 let get_warl_range k ?(yk=[k]) yaml =
   let range_yaml = find_path yk yaml in
-  let rl = get_list (get_list get_int) (find_key "rangelist" range_yaml) in
+  let rl = Array(get_list get_warl_range_entry (find_key "rangelist" range_yaml)) in
   let mode = get_string ["mode"] range_yaml in
-  let rlv = Array(List.map (fun is -> Array(is)) rl) in
   (k,
   StructValue (
       "WARL_range",
       [
-        ("rangelist", rlv);
+        ("rangelist", rl);
         ("mode", Id ("WARL_" ^ mode))
       ]
     )
@@ -360,7 +368,7 @@ let get_mhpmevent_config k yaml =
         StructValue(
             "WARL_range",
               [
-                ("rangelist", Array([Array([Int(v)])]));
+                ("rangelist", Array([UnionValue("WARL_range_value", Int(v))]));
                 ("mode", Id ("WARL_Unchanged"))
               ]
           )

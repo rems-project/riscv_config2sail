@@ -11,8 +11,13 @@ enum WARL_range_mode = {
   WARL_Addr
 }
 
+union WARL_range_entry = {
+  WARL_range_value : int,
+  WARL_range_interval : (int, int)
+}
+
 struct WARL_range = {
-  rangelist : list(list(int)),
+  rangelist : list(WARL_range_entry),
   mode : WARL_range_mode
 }
 
