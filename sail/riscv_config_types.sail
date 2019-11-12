@@ -12,8 +12,8 @@ enum WARL_range_mode = {
 }
 
 union WARL_range_entry = {
-  WARL_range_value : int,
-  WARL_range_interval : (int, int)
+  WARL_range_value : nat,
+  WARL_range_interval : (nat, nat)
 }
 
 struct WARL_range = {
@@ -22,8 +22,8 @@ struct WARL_range = {
 }
 
 struct WARL_bitmask = {
-  mask : int, /* XXX consider using bits('n) */
-  default_val :  int
+  mask : nat, /* XXX consider using bits('n) */
+  default_val : nat
 }
 
 union WARL_either = {
@@ -39,12 +39,12 @@ struct misa_config = {
 
 struct id_reg_config = {
   implemented : bool,
-  id          : int
+  id          : nat
 }
 
 struct hardwired_config = {
   is_hardwired : bool,
-  hardwired_val: int
+  hardwired_val: nat
 }
 
 struct XXL_config = {
@@ -80,12 +80,12 @@ struct tvec_config = {
 struct bitmask_hardwired_config = { /* Should be union? */
   mask : WARL_bitmask,
   is_hardwired : bool,
-  hardwired_val : int
+  hardwired_val : nat
 }
 
 struct mhpmcounter_config = {
   is_hardwired : bool,
-  hardwired_val : int
+  hardwired_val : nat
 }
 
 struct satp_config = {
@@ -110,12 +110,12 @@ struct isa_config = {
 struct riscv_isa_config = {
   ISA    : isa_config,
   hw_data_misaligned_support : bool,
-  xlen : int, /* XXX 32, 64, 128 */
+  xlen : nat, /* XXX 32, 64, 128 */
   misa : misa_config,
   mvendorid : id_reg_config,
   marchid   : id_reg_config,
   mimpid    : id_reg_config,
-  mhartid   : int,
+  mhartid   : nat,
   mstatus   : mstatus_config,
   mtvec     : tvec_config,
   mideleg   : WARL_bitmask,
@@ -166,17 +166,17 @@ struct riscv_isa_config = {
 
 union label_address_config = {
   LA_Label : string,
-  LA_Address : int
+  LA_Address : nat
 }
 
 struct address_implemented_config = {
-  address : int,
+  address : nat,
   implemented : bool
 }
 
 struct cause_config = {
   implemented : bool,
-  values : list(int)
+  values : list(nat)
 }
 
 struct riscv_platform_config = {
