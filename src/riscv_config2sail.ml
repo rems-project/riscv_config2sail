@@ -210,11 +210,13 @@ let get_misa_config k yaml =
   
 let get_id_reg_config k yaml =
   let id_yaml = find_key k yaml in
+  let implemented = get_bool ["implemented"] id_yaml in
+  let id_val = if implemented then (get_int64 ["id"] id_yaml) else Int64.zero in (* XXX is there a difference between not implemented and id of zero?! *)
   (k, StructValue(
       "id_reg_config",
       [
         get_bool_val "implemented" id_yaml;
-        get_int_val "id" id_yaml;
+        ("id", Int(id_val));
       ]
   ))
 
