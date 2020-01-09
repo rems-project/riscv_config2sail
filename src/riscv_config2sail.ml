@@ -235,17 +235,30 @@ let get_hardwired_config k yaml =
 
 let get_xxl_config k yaml =
   let xxl_yaml = find_key k yaml in
-  let hardwired_mxl = "MXL" = get_string ["hardwired_field"] xxl_yaml in
-  (k,
-  StructValue(
-      "XXL_config",
-      [
-        get_warl_range "rnge" ~yk:["range"] xxl_yaml;
-        get_bool_val "is_hardwired" xxl_yaml;
-        ("hardwired_mxl", Bool(hardwired_mxl))
-      ]
+  let implemented = get_bool ["implemented"] xxl_yaml in
+  if implemented then
+    let hardwired_mxl = "MXL" = get_string ["hardwired_field"] xxl_yaml in
+    (k,
+     StructValue(
+        "XXL_config",
+        [
+          get_warl_range "rnge" ~yk:["range"] xxl_yaml;
+          get_bool_val "is_hardwired" xxl_yaml;
+          ("hardwired_mxl", Bool(hardwired_mxl))
+        ]
+      )
     )
-  )
+  else
+    (k,
+     StructValue(
+        "XXL_config",
+        [
+          ("rnge", StructValue("WARL_range", [("rangelist", Array([])); ("mode", Id("WARL_Unchanged"))]));
+          ("is_hardwired", Bool(true));
+          ("hardwired_mxl", Bool(true))
+        ]
+      )
+    )
 
 let get_x_is_hardwired x yaml =
   get_bool_val ~yk:[x;"is_hardwired"] (x ^ "_is_hardwired") yaml
